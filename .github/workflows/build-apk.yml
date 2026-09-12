@@ -10,27 +10,37 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: android-actions/setup-android@v3
-      - name: Create Full Android Project
+      - name: Create Project
         run: |
           cat > settings.gradle <<'EOF'
-          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
-          dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+          pluginManagement {
+            repositories {
+              google()
+              mavenCentral()
+              gradlePluginPortal()
+            }
+          }
+          dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+              google()
+              mavenCentral()
+            }
+          }
           include ":app"
           EOF
           cat > build.gradle <<'EOF'
-          plugins { id "com.android.application" version "8.1.4" apply false; id "org.jetbrains.kotlin.android" version "1.9.10" apply false }
+          plugins {
+            id "com.android.application" version "8.1.4" apply false
+            id "org.jetbrains.kotlin.android" version "1.9.10" apply false
+          }
           EOF
           cat > gradle.properties <<'EOF'
           org.gradle.jvmargs=-Xmx2g
           android.useAndroidX=true
           EOF
           mkdir -p app/src/main/java/com/godswill/school
-          # If MainActivity.kt exists at root, use it, otherwise create simple one
-          if [ -f MainActivity.kt ]; then cp MainActivity.kt app/src/main/java/com/godswill/school/MainActivity.kt; fi
-          if [ -f app/MainActivity.kt ]; then cp app/MainActivity.kt app/src/main/java/com/godswill/school/MainActivity.kt; fi
-          # Create a guaranteed working MainActivity if yours has error
-          if! grep -q "class MainActivity" app/src/main/java/com/godswill/school/MainActivity.kt 2>/dev/null; then
-          cat > app/src/main/java/com/godswill/school/MainActivity.kt <<'EOL'
+          cat > app/src/main/java/com/godswill/school/MainActivity.kt <<'EOF'
           package com.godswill.school
           import android.os.Bundle
           import androidx.activity.ComponentActivity
@@ -42,20 +52,50 @@ jobs:
               setContent { Text("Gods Will School - Welcome!") }
             }
           }
-          EOL
-          fi
+          EOF
           cat > app/build.gradle <<'EOF'
-          plugins { id "com.android.application"; id "org.jetbrains.kotlin.android" }
-          android { namespace "com.godswill.school"; compileSdk 34; defaultConfig { applicationId "com.godswill.school"; minSdk 24; targetSdk 34; versionCode 1; versionName "1.0" }; compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }; kotlinOptions { jvmTarget = "17" } }
-          dependencies { implementation "androidx.core:core-ktx:1.12.0"; implementation "androidx.compose.ui:ui:1.5.4"; implementation "androidx.compose.material3:material3:1.1.2"; implementation "androidx.activity:activity-compose:1.8.2" }
+          plugins {
+            id "com.android.application"
+            id "org.jetbrains.kotlin.android"
+          }
+          android {
+            namespace "com.godswill.school"
+            compileSdk 34
+            defaultConfig {
+              applicationId "com.godswill.school"
+              minSdk 24
+              targetSdk 34
+              versionCode 1
+              versionName "1.0"
+            }
+            compileOptions {
+              sourceCompatibility JavaVersion.VERSION_17
+              targetCompatibility JavaVersion.VERSION_17
+            }
+            kotlinOptions { jvmTarget = "17" }
+          }
+          dependencies {
+            implementation "androidx.core:core-ktx:1.12.0"
+            implementation "androidx.compose.ui:ui:1.5.4"
+            implementation "androidx.compose.material3:material3:1.1.2"
+            implementation "androidx.activity:activity-compose:1.8.2"
+          }
           EOF
           mkdir -p app/src/main
           cat > app/src/main/AndroidManifest.xml <<'EOF'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Gods Will School"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <application android:label="Gods Will School">
+              <activity android:name=".MainActivity" android:exported="true">
+                <intent-filter>
+                  <action android:name="android.intent.action.MAIN"/>
+                  <category android:name="android.intent.category.LAUNCHER"/>
+                </intent-filter>
+              </activity>
+            </application>
+          </manifest>
           EOF
-      - name: Build APK with logs
-        run: |
-          gradle assembleDebug --stacktrace
+      - name: Build APK
+        run: gradle assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: GodsWill-School-App
